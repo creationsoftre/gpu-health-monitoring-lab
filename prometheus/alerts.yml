@@ -1,0 +1,62 @@
+groups:
+  - name: gpu-health
+    rules:
+      - alert: GPUExporterDown
+        expr: up{job="gpu-exporter"} == 0
+        for: 30s
+        labels:
+          severity: warning
+          component: telemetry
+        annotations:
+          summary: "GPU exporter target is down"
+          description: "Prometheus cannot scrape the GPU exporter target for at least 30 seconds."
+
+      - alert: GPUHighTemperatureWarning
+        expr: gpu_temperature_celsius > 75
+        for: 2m
+        labels:
+          severity: warning
+          component: gpu
+        annotations:
+          summary: "GPU temperature is above 75°C"
+          description: "The GPU temperature has remained above 75°C for at least 2 minutes."
+
+      - alert: GPUHighTemperatureCritical
+        expr: gpu_temperature_celsius > 85
+        for: 1m
+        labels:
+          severity: critical
+          component: gpu
+        annotations:
+          summary: "GPU temperature is above 85°C"
+          description: "The GPU temperature has remained above 85°C for at least 1 minute."
+
+      - alert: GPUMemoryUsageHigh
+        expr: (gpu_memory_used_megabytes / gpu_memory_total_megabytes) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+          component: gpu
+        annotations:
+          summary: "GPU memory usage is above 80%"
+          description: "GPU memory usage has remained above 80% for at least 2 minutes."
+
+      - alert: GPUMemoryUsageCritical
+        expr: (gpu_memory_used_megabytes / gpu_memory_total_megabytes) * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+          component: gpu
+        annotations:
+          summary: "GPU memory usage is above 95%"
+          description: "GPU memory usage has remained above 95% for at least 1 minute."
+
+      - alert: GPUMetricsMissing
+        expr: absent(gpu_temperature_celsius)
+        for: 30s
+        labels:
+          severity: critical
+          component: telemetry
+        annotations:
+          summary: "GPU temperature metric is missing"
+          description: "Prometheus has not seen gpu_temperature_celsius for at least 30 seconds."
