@@ -327,8 +327,6 @@ def alerts():
             }
         )
 
-    # Sort alerts so the highest-priority alert controls node-status.json.
-    # Incident files are still written for every alert.
     alerts_list = sorted(
         alerts_list,
         key=get_alert_priority,
@@ -372,7 +370,6 @@ def alerts():
 
         incident_files.append(incident_file)
 
-    # Update node-status.json only once using the highest-priority alert.
     if alertmanager_status == "resolved":
         final_status_payload = mark_healthy_after_validation(
             last_alert=primary_alertname,
