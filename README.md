@@ -1,8 +1,6 @@
 # GPU Health Monitoring and Remediation Lab
 [![CI](https://github.com/creationsoftre/gpu-health-monitoring-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/creationsoftre/gpu-health-monitoring-lab/actions/workflows/ci.yml)
 
-# GPU Health Monitoring and Remediation Lab
-
 ## Overview
 
 This project is a small-scale GPU infrastructure reliability lab built on a Windows 11 machine with WSL 2, Docker, and an NVIDIA RTX 3060 Ti.
