@@ -1,4 +1,7 @@
 # GPU Health Monitoring and Remediation Lab
+![CI](https://github.com/trevontejw/gpu-health-monitoring-lab/actions/workflows/ci.yml/badge.svg)
+
+# GPU Health Monitoring and Remediation Lab
 
 ## Overview
 
