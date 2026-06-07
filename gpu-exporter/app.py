@@ -5,10 +5,12 @@ import subprocess
 import time
 
 from prometheus_client import Gauge, start_http_server
+from pathlib import Path
 
 
 PORT = 9400
 COLLECTION_INTERVAL_SECONDS = 5
+SIMULATION_FILE = Path("/state/simulate_failure")
 
 # Prometheus metric names should include units where appropriate.
 gpu_temperature = Gauge(
@@ -46,6 +48,11 @@ gpu_exporter_up = Gauge(
     "Whether the exporter successfully collected GPU metrics",
 )
 
+gpu_health_status = Gauge(
+    "gpu_health_status",
+    "Synthetic GPU health status. 1 healthy, 0 degraded",
+    ["gpu_name", "gpu_uuid"],
+)
 
 def parse_number(value: str) -> float:
     # Convert an nvidia-smi value into a number Prometheus can store.
@@ -91,12 +98,22 @@ def collect_gpu_metrics() -> None:
         gpu_name = row[0].strip()
         gpu_uuid = row[1].strip()
         labels = (gpu_name, gpu_uuid)
+        simulation_enabled = SIMULATION_FILE.exists()
 
-        gpu_temperature.labels(*labels).set(parse_number(row[2]))
-        gpu_utilization.labels(*labels).set(parse_number(row[3]))
-        gpu_memory_used.labels(*labels).set(parse_number(row[4]))
-        gpu_memory_total.labels(*labels).set(parse_number(row[5]))
-        gpu_power_draw.labels(*labels).set(parse_number(row[6]))
+        if simulation_enabled:
+            gpu_temperature.labels(*labels).set(99)
+            gpu_utilization.labels(*labels).set(0)
+            gpu_memory_used.labels(*labels).set(parse_number(row[4]))
+            gpu_memory_total.labels(*labels).set(parse_number(row[5]))
+            gpu_power_draw.labels(*labels).set(parse_number(row[6]))
+            gpu_health_status.labels(*labels).set(0)
+        else:
+            gpu_temperature.labels(*labels).set(parse_number(row[2]))
+            gpu_utilization.labels(*labels).set(parse_number(row[3]))
+            gpu_memory_used.labels(*labels).set(parse_number(row[4]))
+            gpu_memory_total.labels(*labels).set(parse_number(row[5]))
+            gpu_power_draw.labels(*labels).set(parse_number(row[6]))
+            gpu_health_status.labels(*labels).set(1)
 
     gpu_exporter_up.set(1)
 

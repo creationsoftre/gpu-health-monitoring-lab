@@ -251,3 +251,17 @@ This project demonstrates:
 ## Portfolio Summary
 
 Built a GPU health monitoring and remediation lab using Docker, Prometheus, Grafana, Alertmanager, and Python to monitor RTX 3060 Ti telemetry, detect degraded GPU conditions, route alerts, generate incident records, and simulate node quarantine, validation, and recovery workflows.
+
+## Common Commands
+
+| Command | Purpose |
+|---|---|
+| `make up` | Build and start the full stack |
+| `make down` | Stop the stack |
+| `make logs` | Follow logs for all services |
+| `make ps` | Show container status |
+| `make test-alert` | Stop the GPU exporter to trigger alerts |
+| `make recover` | Restart the GPU exporter |
+| `make status` | Show current node remediation status |
+| `make incidents` | Show recent incident files |
+| `make clean` | Stop stack and remove runtime data |

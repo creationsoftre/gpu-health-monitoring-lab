@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show project structure
+        run: |
+          pwd
+          find . -maxdepth 3 -type f | sort
+
+      - name: Validate Docker Compose config
+        run: docker compose config
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check GPU exporter Python syntax
+        run: python -m py_compile gpu-exporter/app.py
+
+      - name: Check remediator Python syntax
+        run: python -m py_compile remediator/app.py
+
+      - name: Install GPU exporter dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r gpu-exporter/requirements.txt
+
+      - name: Install remediator dependencies
+        run: pip install -r remediator/requirements.txt
+
+      - name: Build GPU exporter Docker image
+        run: docker build ./gpu-exporter
+
+      - name: Build remediator Docker image
+        run: docker build ./remediator

@@ -60,3 +60,13 @@ groups:
         annotations:
           summary: "GPU temperature metric is missing"
           description: "Prometheus has not seen gpu_temperature_celsius for at least 30 seconds."
+
+      - alert: GPUDegraded
+        expr: gpu_health_status == 0
+        for: 15s
+        labels:
+          severity: critical
+          component: gpu
+        annotations:
+          summary: "GPU has been marked degraded"
+          description: "The GPU exporter reports gpu_health_status as 0."
