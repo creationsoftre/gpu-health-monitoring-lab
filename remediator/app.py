@@ -60,6 +60,94 @@ STATUS_VALUE = {
 }
 
 
+EXPECTED_INCIDENT_SERIES = [
+    {
+        "alertname": "GPUExporterDown",
+        "severity": "warning",
+        "status": "firing",
+        "action": "MARK_TELEMETRY_DOWN",
+    },
+    {
+        "alertname": "GPUMetricsMissing",
+        "severity": "critical",
+        "status": "firing",
+        "action": "QUARANTINE_NODE",
+    },
+    {
+        "alertname": "GPUHighTemperatureWarning",
+        "severity": "warning",
+        "status": "firing",
+        "action": "MARK_DEGRADED",
+    },
+    {
+        "alertname": "GPUHighTemperatureCritical",
+        "severity": "critical",
+        "status": "firing",
+        "action": "QUARANTINE_NODE",
+    },
+    {
+        "alertname": "GPUMemoryUsageHigh",
+        "severity": "warning",
+        "status": "firing",
+        "action": "MARK_DEGRADED",
+    },
+    {
+        "alertname": "GPUMemoryUsageCritical",
+        "severity": "critical",
+        "status": "firing",
+        "action": "QUARANTINE_NODE",
+    },
+    {
+        "alertname": "GPUDegraded",
+        "severity": "critical",
+        "status": "firing",
+        "action": "QUARANTINE_NODE",
+    },
+    {
+        "alertname": "GPUExporterDown",
+        "severity": "warning",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUMetricsMissing",
+        "severity": "critical",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUHighTemperatureWarning",
+        "severity": "warning",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUHighTemperatureCritical",
+        "severity": "critical",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUMemoryUsageHigh",
+        "severity": "warning",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUMemoryUsageCritical",
+        "severity": "critical",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+    {
+        "alertname": "GPUDegraded",
+        "severity": "critical",
+        "status": "resolved",
+        "action": "RESTORE_NODE",
+    },
+]
+
+
 # -----------------------------
 # Helper functions
 # -----------------------------
@@ -70,6 +158,24 @@ def utc_now() -> str:
 
 def unix_now() -> float:
     return time.time()
+
+
+def initialize_incident_metrics() -> None:
+    """
+    Pre-create known incident counter label combinations with zero values.
+
+    Without this, Prometheus does not expose remediator_incidents_total
+    until the first alert is received, which causes Grafana panels to show
+    No data instead of 0.
+    """
+
+    for series in EXPECTED_INCIDENT_SERIES:
+        incidents_total.labels(
+            alertname=series["alertname"],
+            severity=series["severity"],
+            status=series["status"],
+            action=series["action"],
+        ).inc(0)
 
 
 def get_alert_name(alert: dict) -> str:
@@ -286,6 +392,8 @@ def healthz():
 
 @app.get("/status")
 def status():
+    initialize_incident_metrics()
+
     status_file = STATE_DIR / "node-status.json"
 
     if not status_file.exists():
@@ -306,11 +414,14 @@ def status():
 
 @app.get("/metrics")
 def metrics():
+    initialize_incident_metrics()
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.post("/alerts")
 def alerts():
+    initialize_incident_metrics()
+
     payload = request.get_json(force=True)
 
     alertmanager_status = payload.get("status", "unknown")
@@ -327,6 +438,8 @@ def alerts():
             }
         )
 
+    # Sort alerts so the highest-priority alert controls node-status.json.
+    # Incident files are still written for every alert.
     alerts_list = sorted(
         alerts_list,
         key=get_alert_priority,
@@ -370,6 +483,7 @@ def alerts():
 
         incident_files.append(incident_file)
 
+    # Update node-status.json only once using the highest-priority alert.
     if alertmanager_status == "resolved":
         final_status_payload = mark_healthy_after_validation(
             last_alert=primary_alertname,
@@ -396,6 +510,8 @@ def alerts():
 
 
 if __name__ == "__main__":
+    initialize_incident_metrics()
+
     write_node_status(
         status="HEALTHY",
         reason="Remediator initialized.",

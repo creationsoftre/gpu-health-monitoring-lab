@@ -4,8 +4,8 @@ import math
 import subprocess
 import time
 
-from prometheus_client import Gauge, start_http_server
 from pathlib import Path
+from prometheus_client import Gauge, start_http_server
 
 
 PORT = 9400
@@ -45,7 +45,12 @@ gpu_power_draw = Gauge(
 
 gpu_exporter_up = Gauge(
     "gpu_exporter_up",
-    "Whether the exporter successfully collected GPU metrics",
+    "Whether the exporter successfully collected GPU metrics. 1 up, 0 failed.",
+)
+
+gpu_exporter_down = Gauge(
+    "gpu_exporter_down",
+    "Whether GPU metric collection is currently failing. 0 ok, 1 failed.",
 )
 
 gpu_health_status = Gauge(
@@ -54,14 +59,24 @@ gpu_health_status = Gauge(
     ["gpu_name", "gpu_uuid"],
 )
 
+
 def parse_number(value: str) -> float:
-    # Convert an nvidia-smi value into a number Prometheus can store.
     cleaned = value.strip()
 
     if cleaned in {"", "N/A", "[Not Supported]"}:
         return math.nan
 
     return float(cleaned)
+
+
+def mark_exporter_healthy() -> None:
+    gpu_exporter_up.set(1)
+    gpu_exporter_down.set(0)
+
+
+def mark_exporter_down() -> None:
+    gpu_exporter_up.set(0)
+    gpu_exporter_down.set(1)
 
 
 def collect_gpu_metrics() -> None:
@@ -90,14 +105,18 @@ def collect_gpu_metrics() -> None:
     )
 
     rows = csv.reader(io.StringIO(result.stdout))
+    collected_any_gpu = False
 
     for row in rows:
         if len(row) != len(fields):
             continue
 
+        collected_any_gpu = True
+
         gpu_name = row[0].strip()
         gpu_uuid = row[1].strip()
         labels = (gpu_name, gpu_uuid)
+
         simulation_enabled = SIMULATION_FILE.exists()
 
         if simulation_enabled:
@@ -115,10 +134,17 @@ def collect_gpu_metrics() -> None:
             gpu_power_draw.labels(*labels).set(parse_number(row[6]))
             gpu_health_status.labels(*labels).set(1)
 
-    gpu_exporter_up.set(1)
+    if not collected_any_gpu:
+        raise RuntimeError("nvidia-smi returned no GPU rows")
+
+    mark_exporter_healthy()
 
 
 def main() -> None:
+    # Initialize exporter status immediately so Grafana does not show No data
+    # before the first collection cycle finishes.
+    mark_exporter_down()
+
     start_http_server(PORT)
     print(f"GPU exporter listening on port {PORT}", flush=True)
 
@@ -126,7 +152,7 @@ def main() -> None:
         try:
             collect_gpu_metrics()
         except Exception as error:
-            gpu_exporter_up.set(0)
+            mark_exporter_down()
             print(f"GPU metric collection failed: {error}", flush=True)
 
         time.sleep(COLLECTION_INTERVAL_SECONDS)

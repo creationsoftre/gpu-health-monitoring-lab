@@ -44,6 +44,32 @@ Prometheus
           Grafana
 ```
 
+## Screenshots
+
+### Grafana GPU Operations Dashboard - Healthy State
+
+![Grafana GPU Operations Dashboard showing healthy GPU telemetry and remediation status](docs/images/grafana-dashboard-healthy.png)
+
+### Grafana GPU Operations Dashboard - Alert / Remediation State
+
+![Grafana GPU Operations Dashboard showing active GPU alerts, quarantined node status, and incident metrics](docs/images/grafana-dashboard-failed.png)
+
+### Prometheus Alerts - Healthy State
+
+![Prometheus alert rules showing all GPU health alerts inactive](docs/images/prometheus-alerts-healthy.png)
+
+### Prometheus Targets - Healthy State
+
+![Prometheus target health showing GPU exporter and remediator targets up](docs/images/prometheus-targets-healthy.png)
+
+### Prometheus Alerts - Firing State
+
+![Prometheus alert rules showing GPU health alerts firing](docs/images/prometheus-alerts-firing.png)
+
+### Prometheus Targets - Remediator Down State
+
+![Prometheus target health showing the remediator scrape target down](docs/images/prometheus-targets-remediator-down.png)
+
 ## Technologies Used
 
 * Windows 11

@@ -1006,7 +1006,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count(ALERTS{alertname=\"GPUExporterDown\", alertstate=~\"firing|pending\"})",
+                        "expr": "count(ALERTS{alertname=\"GPUExporterDown\", alertstate=~\"firing|pending\"}) or vector(0)",
                         "legendFormat": "__auto",
                         "range": false,
                         "instant": true,
@@ -1108,7 +1108,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count(ALERTS{severity=\"warning\", alertstate=~\"firing|pending\"})",
+                        "expr": "count(ALERTS{severity=\"warning\", alertstate=~\"firing|pending\"}) or vector(0)",
                         "legendFormat": "__auto",
                         "range": false,
                         "instant": true,
@@ -1195,7 +1195,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count(ALERTS{severity=\"critical\", alertstate=~\"firing|pending\"})",
+                        "expr": "count(ALERTS{severity=\"critical\", alertstate=~\"firing|pending\"}) or vector(0)",
                         "legendFormat": "__auto",
                         "range": false,
                         "instant": true,
