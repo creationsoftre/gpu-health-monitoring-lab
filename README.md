@@ -15,8 +15,6 @@ The goal of this project is to model a production-style GPU operations workflow:
 Observe → Detect → Alert → Route → Record → Remediate → Validate → Recover
 ```
 
-This project simulates how an infrastructure team might identify, diagnose, and remediate unhealthy GPU assets in a larger AI infrastructure environment.
-
 ## Architecture
 
 ```text
@@ -260,24 +258,6 @@ The node status should eventually return to `HEALTHY`.
 | Remediator Status    | http://localhost:5001/status  |
 | Remediator Metrics   | http://localhost:5001/metrics |
 
-## What This Project Demonstrates
-
-This project demonstrates:
-
-* GPU telemetry collection
-* Prometheus metric scraping
-* Grafana dashboard visualization
-* Alert rule creation
-* Alertmanager routing
-* Webhook-based remediation
-* Incident logging
-* Simulated GPU node quarantine
-* Recovery validation
-* Remediation metrics
-
-## Portfolio Summary
-
-Built a GPU health monitoring and remediation lab using Docker, Prometheus, Grafana, Alertmanager, and Python to monitor RTX 3060 Ti telemetry, detect degraded GPU conditions, route alerts, generate incident records, and simulate node quarantine, validation, and recovery workflows.
 
 ## Common Commands
 
